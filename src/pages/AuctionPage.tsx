@@ -140,7 +140,6 @@ export function AuctionPage() {
       });
 
       if (response.ok) {
-        // Refresh bid data after a successful bid submission
         fetchBidData();
         console.log("Bid submitted successfully!");
       } else {

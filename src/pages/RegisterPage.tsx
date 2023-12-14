@@ -11,6 +11,23 @@ export function RegisterPage() {
     password: "",
     avatar: null as File | null,
   });
+  const [isImageSelected, setIsImageSelected] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
+  const isPasswordValid = (password: string) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,30}$/;
+    return passwordRegex.test(password);
+  };
+
+  const isUsernameValid = (username: string) => {
+    return username.trim().length > 0;
+  };  
+
+  const isGmailValid = (email: string) => {
+    const gmailRegex = /^[\w-.]+@gmail\.com$/;
+    return gmailRegex.test(email);
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -20,19 +37,47 @@ export function RegisterPage() {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFormData((prevData) => ({ ...prevData, avatar: file }));
+    setIsImageSelected(!!file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     try {
       const { username, email, password, avatar } = formData;
+  
+      if (!isUsernameValid(username)) {
+        setPasswordError("Username cannot be empty or blank.");
+        return;
+      }
+  
+      if (!isPasswordValid(password)) {
+        setPasswordError(
+          "Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, and numbers."
+        );
+        return;
+      }
+  
+      if (!isGmailValid(email)) {
+        setPasswordError("Please enter a valid Gmail address.");
+        return;
+      }
+  
+      if (!isImageSelected) {
+        setPasswordError("Please select an image for your avatar.");
+        return;
+      }
+
+      setPasswordError(null);
 
       const formDataToSend = new FormData();
       formDataToSend.append("userModel", JSON.stringify({ username, email, password }));
-      formDataToSend.append("userAvatarImg", avatar || ""); // Use an empty string if avatar is null
+      formDataToSend.append("userAvatarImg", avatar || "");
 
-      const response = await axios.post("http://localhost:8080/api/v1/auth/register", formDataToSend);
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/auth/register",
+        formDataToSend
+      );
 
       const token = response.data.token;
       localStorage.setItem("jwtToken", token);
@@ -52,7 +97,7 @@ export function RegisterPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-gray-600">
+          <label htmlFor="username" className="block text-gray-600">
               Ім'я користувача
             </label>
             <input
@@ -61,9 +106,10 @@ export function RegisterPage() {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              className={`w-full p-2 border border-gray-300 rounded ${!isUsernameValid(formData.username) && "invalid-username"}`}
               placeholder="Ваше ім'я користувача"
             />
+            {usernameError && <p className="text-red-500 mt-1 mb-4">{usernameError}</p>}
           </div>
 
           <div className="mb-4">
@@ -82,18 +128,18 @@ export function RegisterPage() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-gray-600">
-              Пароль
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              placeholder="********"
-            />
+          <label htmlFor="password" className="block text-gray-600">
+            Пароль
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
+            placeholder="********"
+          />
           </div>
 
           <div className="mb-4">
@@ -110,15 +156,17 @@ export function RegisterPage() {
           </div>
 
           <div className="text-center">
+          {passwordError && <p className="text-red-500 mt-1 mb-4">{passwordError}</p>}
             <button
               type="submit"
               className="bg-blue-600 text-white py-2 px-4 rounded hover-bg-blue-700"
             >
               Зареєструватися
             </button>
-            <p className="mt-5" > Already registered? 
+            <p className="mt-5">
+              Already registered?
               <Link to={"/login"}>
-                <span className="text-blue-600" > Log in </span>
+                <span className="text-blue-600"> Log in </span>
               </Link>
             </p>
           </div>
@@ -127,4 +175,3 @@ export function RegisterPage() {
     </div>
   );
 }
-

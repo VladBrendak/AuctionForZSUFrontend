@@ -8,6 +8,7 @@ export function LoginPage() {
     email: "",
     password: "",
   });
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -18,26 +19,20 @@ export function LoginPage() {
     e.preventDefault();
 
     try {
-      // Get form data
       const { email, password } = formData;
 
-      // Send data to the server
-      const response = await axios.post("http://localhost:8080/api/v1/auth/authenticate", {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/auth/authenticate",
+        { email, password }
+      );
 
-      // Get JWT token from the server response
       const token = response.data.token;
-
       console.log("Login successful, token:", token);
-      // Save the token in LocalStorage
       localStorage.setItem("jwtToken", token);
 
-      // Redirect to the home page
       navigate("/");
     } catch (error) {
-      console.error("Login error:", error);
+      setLoginError("Invalid login or password.");
     }
   };
 
@@ -80,6 +75,7 @@ export function LoginPage() {
           </div>
 
           <div className="text-center">
+          {loginError && <p className="text-red-500 mt-4 mb-4">{loginError}</p>}
             <button
               type="submit"
               className="bg-blue-600 text-white py-2 px-4 rounded hover-bg-blue-700"
